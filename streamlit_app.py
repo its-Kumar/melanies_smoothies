@@ -1,6 +1,7 @@
 # Import python packages
 import streamlit as st
 import requests
+import pandas as pd
 
 from snowflake.snowpark.functions import col
 
@@ -13,6 +14,10 @@ session = cnx.session()
 
 my_dataframe = session.table("smoothies.public.fruit_options").select(col('FRUIT_NAME'))
 # st.dataframe(data=my_dataframe, use_container_width=True)
+pd_df = my_dataframe.to_pandas()
+
+
+
 ingredient_string = ""
 
 name_on_order = st.text_input("Name on Smoothie:")
@@ -27,7 +32,11 @@ if ingredient_list:
 
     for fruit in ingredient_list:
         ingredient_string += fruit + " "
-        st.subheader(fruit + 'Nutrition Infromation')
+
+        search_on=pd_df.loc[pd_df['FRUIT_NAME'] == fruit, 'SEARCH_ON'].iloc[0]
+        st.write('The search value for ', fruit,' is ', search_on, '.')
+
+        st.subheader(fruit + ' Nutrition Infromation')
         fruityvice_response = requests.get("https://fruityvice.com/api/fruit/" + fruit)
         fv_df = st.dataframe(data=fruityvice_response.json(), use_container_width=True)
 
